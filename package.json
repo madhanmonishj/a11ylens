@@ -1,0 +1,30 @@
+{
+  "name": "a11ylens",
+  "version": "0.1.0",
+  "description": "A11yLens — static accessibility scanner that analyzes templates and produces an accessibility fingerprint.",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "bin": {
+    "a11ylens": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "npm run build -- --watch",
+    "test": "echo \"No tests yet\""
+  },
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "scanner",
+    "audit",
+    "angular",
+    "html",
+    "static-analysis",  
+    "cli"
+  ],
+  "author": "Madhan Monish Jayakumar",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/madhanmonishj/a11ylens.git"
+  }
+}
