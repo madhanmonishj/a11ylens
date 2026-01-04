@@ -5,12 +5,13 @@
   "license": "MIT",
   "main": "dist/index.js",
   "bin": {
-    "a11ylens": "dist/cli.js"
+    "a11ylens": "dist/cli/index.js"
   },
   "scripts": {
     "build": "tsc",
     "dev": "npm run build -- --watch",
-    "test": "npm run build && node --test test"
+    "test": "npm run build && node --test test/**/*.test.js",
+    "lint": "echo \"No lint configured\""
   },
   "keywords": [
     "accessibility",
@@ -26,5 +27,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/madhanmonishj/a11ylens.git"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.2",
+    "typescript": "^5.9.3"
   }
 }

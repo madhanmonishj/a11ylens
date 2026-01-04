@@ -1,134 +1,136 @@
-<pre align="center">
-╔═╗┬ ┬╦  ┌─┐┌┐┌┌─┐
-╠═╣└┬┘║  ├┤ │││└─┐
-╩ ╩ ┴ ╩═╝└─┘┘└┘└─┘
-</pre>
-
-<p align="center"><strong>A11yLens</strong></p>
-<p align="center">See your accessibility clearly.</p>
-
-<p align="center">
-  <img src="https://img.shields.io/npm/v/a11ylens?color=blue&style=flat-square" />
-  <img src="https://img.shields.io/npm/dm/a11ylens?style=flat-square" />
-  <img src="https://img.shields.io/github/license/YOUR_USERNAME/a11ylens?style=flat-square" />
-  <img src="https://img.shields.io/github/issues/YOUR_USERNAME/a11ylens?style=flat-square" />
-</p>
-
----
-
 # A11yLens
 
-A11yLens is a zero-dependency static accessibility scanner for front-end projects.  
-It analyzes template files (Angular external templates, inline templates, HTML fragments) and produces an **Accessibility Fingerprint Score** to help teams measure and improve accessibility over time.
+A11yLens is a TypeScript Node.js CLI + library that scans Angular component templates (external `.component.html` and inline templates in `.component.ts`) for common accessibility issues. It reports findings in console, JSON, or SARIF formats and computes a project score.
 
----
+No runtime dependencies are required.
 
-## ✨ Features
+## Install
 
-- **Static Template Scanning**  
-  Detects accessibility issues directly in component templates — no browser required.
-
-- **Angular-Friendly**  
-  Supports external `.component.html` and inline `template: \`...\`` blocks inside `.ts` files.
-
-- **Zero Runtime Dependencies**  
-  Lightweight, fast, secure.
-
-- **Accessibility Fingerprint Score (0–100)**  
-  Evaluate and track your project’s accessibility health.
-
-- **CLI-First Design**  
-  Optimized for CI pipelines, pre-commit hooks, and local development.
-
----
-
-## 📦 Installation
-
-### Global Install
 ```bash
 npm install -g a11ylens
 ```
 
-### Or use npx (no install required)
+Or run via npx:
+
 ```bash
 npx a11ylens ./src
 ```
 
----
-
-## 🔍 Usage
-
-Scan a project:
+## CLI
 
 ```bash
-a11ylens path/to/project
+a11ylens [roots...] [options]
 ```
 
-Example output:
+Options:
 
-```
-A11yLens
-========
+- `--config <path>`: Use a specific config file
+- `--format <console|json|sarif>`: Output format (default: console)
+- `--out <path>`: Write JSON/SARIF output to a file
+- `--min-score <n>`: Exit non-zero when score is below `n`
+- `--verbose`: Print extra diagnostics
 
-Scanned roots:
-  - ./src
+Examples:
 
-Files analyzed: 14
-Accessibility score: 92 / 100
-```
-
----
-
-## 📁 Project Structure
-
-```
-src/
-  cli/          # CLI entry point
-  scanner/      # File walker, analyzers, extractors
-  rules/        # Individual rule implementations + registry
-  scoring/      # Accessibility scoring logic
-  utils/        # Shared types, helpers
-dist/
+```bash
+a11ylens ./src
+npx a11ylens ./apps/admin --format json
+npx a11ylens ./src --format sarif --out a11ylens.sarif --min-score 85
 ```
 
----
+## Library API
 
-## 🧭 Roadmap
+```ts
+import { runA11yLens } from "a11ylens";
 
-### **v1.0**
-- Angular template scanning  
-- Base rule set  
-- Score generation  
-- Human-readable CLI output  
+const result = runA11yLens(["./src"], {
+  cwd: process.cwd(),
+  overrides: { minScore: 90 }
+});
 
-### **v2.0**
-- React JSX support  
-- JSON/CI output  
-- Configurable rules  
-- More granular scoring  
+console.log(result.score);
+```
 
----
+## Configuration
 
-## 🤝 Contributing
+A11yLens discovers config files by searching upward from the current working directory.
 
-Contributions are welcome!
+Supported files:
 
-1. Fork the repo  
-2. Create a new branch  
-3. Commit changes with clear messages  
-4. Open a pull request  
+- `.a11ylensrc.json`
+- `a11ylens.config.json`
 
-Suggestions for new rules or framework support are especially welcome.
+Example:
 
----
+```json
+{
+  "includePatterns": ["*.component.html", "*.component.ts"],
+  "ignoreDirs": ["node_modules", ".git", "dist"],
+  "ignorePatterns": ["**/legacy/**"],
+  "styleFiles": ["./styles.css"],
+  "minScore": 85
+}
+```
 
-## 📄 License
+Notes:
 
-A11yLens is released under the **MIT License**.  
-See [`LICENSE`](./LICENSE) for details.
+- `includePatterns` and `ignorePatterns` use a minimal glob-like matcher (`*` prefix/suffix).
+- `ignoreDirs` matches directory names anywhere in the path.
+- `styleFiles` supports simple selectors (`.class`, `tag`, `tag.class`); complex selectors and CSS variables are ignored.
 
----
+## Output Formats
 
-<p align="center">
-  <strong>A11yLens – See your accessibility clearly.</strong>
-</p>
+- Console: human-friendly output with summary and score.
+- JSON: machine-readable full results.
+- SARIF: static analysis format for GitHub code scanning.
+
+## Rules (Built-In)
+
+- Note: rules are minimal and focus on common Angular template issues.
+- `img-alt`: images require `alt`.
+- `clickable-nonsemantic`: clickable div/span needs semantics.
+- `routerlink-text`: router links need an accessible name.
+- `icon-only-control`: icon-only controls need `aria-label`.
+- `color-contrast`: text color must meet WCAG AA ratios when `color` and `background-color` are available (inline or simple class selectors).
+
+## Exit Codes
+
+- `0`: Success
+- `1`: Runtime error
+- `2`: `--min-score` provided and score is below the threshold
+
+## CI Example (SARIF)
+
+```yaml
+name: A11yLens SARIF
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: node dist/cli/index.js ./src --format sarif --out a11ylens.sarif
+      - uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: a11ylens.sarif
+```
+
+## Development
+
+```bash
+npm run build
+npm test
+```
+
+## License
+
+MIT
