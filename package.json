@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "npm run build -- --watch",
-    "test": "echo \"No tests yet\""
+    "test": "npm run build && node --test test"
   },
   "keywords": [
     "accessibility",
