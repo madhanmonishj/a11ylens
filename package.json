@@ -10,7 +10,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "npm run build -- --watch",
-    "test": "npm run build && node --test test/**/*.test.js",
+    "test": "npm run build && node --test test",
     "lint": "echo \"No lint configured\""
   },
   "keywords": [
